@@ -1,6 +1,9 @@
 package postsqlsource;
 
 import com.esri.core.geometry.Geometry;
+import com.esri.core.geometry.GeometryEngine;
+import com.esri.core.geometry.Point;
+import com.esri.core.geometry.SpatialReference;
 import com.esri.core.map.Graphic;
 import com.esri.core.symbol.SimpleFillSymbol;
 import com.esri.core.symbol.SimpleLineSymbol;
@@ -22,11 +25,12 @@ import org.w3c.dom.Element;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Source;
+import javax.xml.transform.*;
 import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import java.awt.*;
 import java.io.File;
-import java.io.FileInputStream;
+import java.io.PrintStream;
 import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -247,11 +251,57 @@ public class MainController implements Initializable, DrawingCompleteListener, M
             Element placemark, name, description, kPoint, coordinates;
 
 
+
+            SpatialReference albers = SpatialReference.create(3005);
+            SpatialReference googleEarth = SpatialReference.create(4326);
+
+
+            int[] graphicIDs = graphicLayer.getGraphicIDs();
+            Graphic tmpGraphic;
+
+            Point albersPoint;
+            Point googlePoint;
+            for (int i =0; i< graphicIDs.length; i++) {
+                tmpGraphic = graphicLayer.getGraphic(graphicIDs[i]);
+
+                if (tmpGraphic.getGeometry().getType() == Geometry.Type.POINT) {
+
+
+                    placemark = kmlDoc.createElement("placemark");
+                    name = kmlDoc.createElement("name");
+                    description = kmlDoc.createElement("description");
+                    kPoint = kmlDoc.createElement("kPoint");
+                    coordinates = kmlDoc.createElement("coordinates");
+
+
+                    albersPoint = (Point) tmpGraphic.getGeometry();
+                    googlePoint = (Point) GeometryEngine.project(albersPoint,albers,googleEarth);
+
+                    coordinates.setTextContent(
+                            String.format("%s,%s", googlePoint.getX(), googlePoint.getY())
+                    );
+
+                    document.appendChild(placemark);
+                    document.appendChild(name);
+                    document.appendChild(description);
+                    document.appendChild(kPoint);
+                    kPoint.appendChild(coordinates);
+
+                    name.setTextContent(tmpGraphic.getAttributeValue("name").toString());
+                    description.setTextContent(tmpGraphic.getAttributeValue("description").toString());
+
+                }
+
+
+            }
+
+
             FileChooser fileChooser = new FileChooser();
             fileChooser.setInitialDirectory(new File("H:/var/gist/8010/"));
             File kmlFile = fileChooser.showSaveDialog(null);
             if (kmlFile != null) {
 
+                saveDomAsXmlOnDisc(kmlDoc,kmlFile);
             }
 
         } catch (ParserConfigurationException e) {
@@ -327,8 +377,6 @@ public class MainController implements Initializable, DrawingCompleteListener, M
         } catch (Exception e) {
             e.printStackTrace();
         }
-    } *
-    end of
-    saveDomAsXmlOnDisc
+    }//end of saveDomAsXmlOnDisc
 
 }
