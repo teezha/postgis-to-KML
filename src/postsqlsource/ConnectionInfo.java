@@ -49,7 +49,7 @@ public class ConnectionInfo {
         this.serverPort = new SimpleStringProperty("5432");
         this.defaultDatabase = new SimpleStringProperty("a00987765");
         this.userName = new SimpleStringProperty("a00987765");
-        this.userPassword = new SimpleStringProperty("******");
+        this.userPassword = new SimpleStringProperty("wz7765");
         this.isValid = false;
         this.connection = null;
     }
