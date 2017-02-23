@@ -1,9 +1,8 @@
 package postsqlsource;
 
-import com.esri.core.geometry.Geometry;
-import com.esri.core.geometry.GeometryEngine;
+import com.esri.core.geometry.*;
 import com.esri.core.geometry.Point;
-import com.esri.core.geometry.SpatialReference;
+import com.esri.core.geometry.Polygon;
 import com.esri.core.map.Graphic;
 import com.esri.core.symbol.SimpleFillSymbol;
 import com.esri.core.symbol.SimpleLineSymbol;
@@ -204,9 +203,44 @@ public class MainController implements Initializable, DrawingCompleteListener, M
                     pgGeom = (PGgeometry) res.getObject("geom");
                     arjGeom = PostGISGeometryEngine.esriPointFromPostGISPoint((org.postgis.Point) pgGeom.getGeometry());
 
+
                     attributes = this.mapFromAttributes(id, name, description);
 
                     tmpGraphic = new Graphic(arjGeom, pointSym, attributes);
+                    graphicLayer.addGraphic(tmpGraphic);
+
+                }
+
+
+                res = sql.executeQuery("SELECT id, name, description, geom from gist_8010_m04.lines_of_interest");
+                while (res.next()) {
+                    id = res.getInt("id");
+                    name = res.getString("name");
+                    description = res.getString("description");
+                    pgGeom = (PGgeometry) res.getObject("geom");
+                    arjGeom = PostGISGeometryEngine.esriLineFromPostGISLine((org.postgis.LineString) pgGeom.getGeometry());
+
+
+                    attributes = this.mapFromAttributes(id, name, description);
+
+                    tmpGraphic = new Graphic(arjGeom, symLine, attributes);
+                    graphicLayer.addGraphic(tmpGraphic);
+
+                }
+
+
+                res = sql.executeQuery("SELECT id, name, description, geom from gist_8010_m04.areas_of_interest");
+                while (res.next()) {
+                    id = res.getInt("id");
+                    name = res.getString("name");
+                    description = res.getString("description");
+                    pgGeom = (PGgeometry) res.getObject("geom");
+                    arjGeom = PostGISGeometryEngine.esriPolyFromPostGISPoly((org.postgis.Polygon) pgGeom.getGeometry());
+
+
+                    attributes = this.mapFromAttributes(id, name, description);
+
+                    tmpGraphic = new Graphic(arjGeom, symPolygon, attributes);
                     graphicLayer.addGraphic(tmpGraphic);
 
                 }
@@ -242,14 +276,13 @@ public class MainController implements Initializable, DrawingCompleteListener, M
             Element kml, document;
 
             kml = kmlDoc.createElement("kml");
-            kml.setAttribute("xmlns", "http:*www.opengis.net/kml/2.2");
+            kml.setAttribute("xmlns", "http://www.opengis.net/kml/2.2");
             kmlDoc.appendChild(kml);
 
             document = kmlDoc.createElement("Document");
             kml.appendChild(document);
 
             Element placemark, name, description, kPoint, coordinates;
-
 
 
             SpatialReference albers = SpatialReference.create(3005);
@@ -261,7 +294,7 @@ public class MainController implements Initializable, DrawingCompleteListener, M
 
             Point albersPoint;
             Point googlePoint;
-            for (int i =0; i< graphicIDs.length; i++) {
+            for (int i = 0; i < graphicIDs.length; i++) {
                 tmpGraphic = graphicLayer.getGraphic(graphicIDs[i]);
 
                 if (tmpGraphic.getGeometry().getType() == Geometry.Type.POINT) {
@@ -275,7 +308,7 @@ public class MainController implements Initializable, DrawingCompleteListener, M
 
 
                     albersPoint = (Point) tmpGraphic.getGeometry();
-                    googlePoint = (Point) GeometryEngine.project(albersPoint,albers,googleEarth);
+                    googlePoint = (Point) GeometryEngine.project(albersPoint, albers, googleEarth);
 
                     coordinates.setTextContent(
                             String.format("%s,%s", googlePoint.getX(), googlePoint.getY())
@@ -301,7 +334,7 @@ public class MainController implements Initializable, DrawingCompleteListener, M
             File kmlFile = fileChooser.showSaveDialog(null);
             if (kmlFile != null) {
 
-                saveDomAsXmlOnDisc(kmlDoc,kmlFile);
+                saveDomAsXmlOnDisc(kmlDoc, kmlFile);
             }
 
         } catch (ParserConfigurationException e) {
@@ -311,10 +344,167 @@ public class MainController implements Initializable, DrawingCompleteListener, M
     }
 
     public void line() {
+        try {
+            /** ===========================================================
+             * import org.w3c.dom.Document;
+             * import org.w3c.dom.Element;
+             * =========================================================== */
+            Document kmlDoc;
+            kmlDoc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+
+            Element kml, document;
+
+            kml = kmlDoc.createElement("kml");
+            kml.setAttribute("xmlns", "http://www.opengis.net/kml/2.2");
+            kmlDoc.appendChild(kml);
+
+            document = kmlDoc.createElement("Document");
+            kml.appendChild(document);
+
+            Element placemark, name, description, kLineString, coordinates;
+
+
+            SpatialReference albers = SpatialReference.create(3005);
+            SpatialReference googleEarth = SpatialReference.create(4326);
+
+
+            int[] graphicIDs = graphicLayer.getGraphicIDs();
+            Graphic tmpGraphic;
+
+            Polyline albersLine;
+            Polyline googleLine;
+            for (int i = 0; i < graphicIDs.length; i++) {
+                tmpGraphic = graphicLayer.getGraphic(graphicIDs[i]);
+
+                if (tmpGraphic.getGeometry().getType() == Geometry.Type.POLYLINE) {
+
+
+                    placemark = kmlDoc.createElement("placemark");
+                    name = kmlDoc.createElement("name");
+                    description = kmlDoc.createElement("description");
+                    kLineString = kmlDoc.createElement("kLineString");
+                    coordinates = kmlDoc.createElement("coordinates");
+
+
+                    albersLine = (Polyline) tmpGraphic.getGeometry();
+                    googleLine = (Polyline) GeometryEngine.project(albersLine, albers, googleEarth);
+
+                    StringBuilder bigString = new StringBuilder();
+                    for (int j = 0; j < albersLine.getPointCount(); j++) {
+                        bigString.append(String.format("%s,%s,0\n", albersLine.getPoint(j).getX(), googleLine.getPoint(j).getY()));
+                    }
+                    coordinates.setTextContent(bigString.toString());
+
+
+                    document.appendChild(placemark);
+                    document.appendChild(name);
+                    document.appendChild(description);
+                    document.appendChild(kLineString);
+                    kLineString.appendChild(coordinates);
+
+                    name.setTextContent(tmpGraphic.getAttributeValue("name").toString());
+                    description.setTextContent(tmpGraphic.getAttributeValue("description").toString());
+
+                }
+
+
+            }
+
+
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setInitialDirectory(new File("H:/var/gist/8010/"));
+            File kmlFile = fileChooser.showSaveDialog(null);
+            if (kmlFile != null) {
+
+                saveDomAsXmlOnDisc(kmlDoc, kmlFile);
+            }
+        } catch (ParserConfigurationException e) {
+            e.printStackTrace();
+        }
+
 
     }
 
     public void polygon() {
+
+
+        try {
+            /** ===========================================================
+             * import org.w3c.dom.Document;
+             * import org.w3c.dom.Element;
+             * =========================================================== */
+            Document kmlDoc;
+            kmlDoc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+
+            Element kml, document;
+
+            kml = kmlDoc.createElement("kml");
+            kml.setAttribute("xmlns", "http://www.opengis.net/kml/2.2");
+            kmlDoc.appendChild(kml);
+
+            document = kmlDoc.createElement("Document");
+            kml.appendChild(document);
+
+            Element placemark, name, description, kPolygon, coordinates;
+
+
+            SpatialReference albers = SpatialReference.create(3005);
+            SpatialReference googleEarth = SpatialReference.create(4326);
+
+
+            int[] graphicIDs = graphicLayer.getGraphicIDs();
+            Graphic tmpGraphic;
+
+            Polygon albersPolygon;
+            Polygon googlePolygon;
+            for (int i = 0; i < graphicIDs.length; i++) {
+                tmpGraphic = graphicLayer.getGraphic(graphicIDs[i]);
+
+                if (tmpGraphic.getGeometry().getType() == Geometry.Type.POLYGON) {
+
+
+                    placemark = kmlDoc.createElement("placemark");
+                    name = kmlDoc.createElement("name");
+                    description = kmlDoc.createElement("description");
+                    kPolygon = kmlDoc.createElement("kLineString");
+                    coordinates = kmlDoc.createElement("coordinates");
+
+
+                    albersPolygon = (Polygon) tmpGraphic.getGeometry();
+                    googlePolygon = (Polygon) GeometryEngine.project(albersPolygon, albers, googleEarth);
+
+                    StringBuilder bigString = new StringBuilder();
+                    for (int j = 0; j < albersPolygon.getPointCount(); j++) {
+                        bigString.append(String.format("%s,%s,0.\n", albersPolygon.getPoint(j).getX(), googlePolygon.getPoint(j).getY()));
+                    }
+                    coordinates.setTextContent(bigString.toString());
+
+
+                    document.appendChild(placemark);
+                    document.appendChild(name);
+                    document.appendChild(description);
+                    document.appendChild(kPolygon);
+                    kPolygon.appendChild(coordinates);
+
+                    name.setTextContent(tmpGraphic.getAttributeValue("name").toString());
+                    description.setTextContent(tmpGraphic.getAttributeValue("description").toString());
+
+                }
+
+
+            }
+
+
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setInitialDirectory(new File("H:/var/gist/8010/"));
+            File kmlFile = fileChooser.showSaveDialog(null);
+            if (kmlFile != null) {
+
+                saveDomAsXmlOnDisc(kmlDoc, kmlFile);
+            }
+        } catch (ParserConfigurationException e) {
+            e.printStackTrace();
+        }
 
 
     }
