@@ -446,7 +446,7 @@ public class MainController implements Initializable, DrawingCompleteListener, M
             document = kmlDoc.createElement("Document");
             kml.appendChild(document);
 
-            Element placemark, name, description, kPolygon, coordinates;
+            Element placemark, name, description, kPolygon, coordinates, outBound, style, clr, polysty, outline, polyG;
 
 
             SpatialReference albers = SpatialReference.create(3005);
@@ -467,8 +467,15 @@ public class MainController implements Initializable, DrawingCompleteListener, M
                     placemark = kmlDoc.createElement("Placemark");
                     name = kmlDoc.createElement("name");
                     description = kmlDoc.createElement("description");
+                    polyG = kmlDoc.createElement("Polygon");
                     kPolygon = kmlDoc.createElement("LinearRing");
+                    outBound = kmlDoc.createElement("outerBoundaryIs");
                     coordinates = kmlDoc.createElement("coordinates");
+                    style = kmlDoc.createElement("Style");
+                    polysty = kmlDoc.createElement("PolyStyle");
+                    clr = kmlDoc.createElement("color");
+                    outline=kmlDoc.createElement("outline");
+
 
 
                     albersPolygon = (Polygon) tmpGraphic.getGeometry();
@@ -484,13 +491,24 @@ public class MainController implements Initializable, DrawingCompleteListener, M
 
 
                     document.appendChild(placemark);
-                    placemark.appendChild(name);
-                    placemark.appendChild(description);
-                    placemark.appendChild(kPolygon);
+                    placemark.appendChild(polyG);
+                    polyG.appendChild(name);
+                    polyG.appendChild(description);
+                    polyG.appendChild(outBound);
+
+                    outBound.appendChild(kPolygon);
                     kPolygon.appendChild(coordinates);
+
+                    polyG.appendChild(style);
+                    style.appendChild(polysty);
+                    polysty.appendChild(clr);
+                    polysty.appendChild(outline);
+
 
                     name.setTextContent(tmpGraphic.getAttributeValue("name").toString());
                     description.setTextContent(tmpGraphic.getAttributeValue("description").toString());
+                    clr.setTextContent("#a00000ff");
+                    outline.setTextContent("0");
 
                 }
 
