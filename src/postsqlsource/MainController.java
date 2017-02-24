@@ -300,10 +300,10 @@ public class MainController implements Initializable, DrawingCompleteListener, M
                 if (tmpGraphic.getGeometry().getType() == Geometry.Type.POINT) {
 
 
-                    placemark = kmlDoc.createElement("placemark");
+                    placemark = kmlDoc.createElement("Placemark");
                     name = kmlDoc.createElement("name");
                     description = kmlDoc.createElement("description");
-                    kPoint = kmlDoc.createElement("kPoint");
+                    kPoint = kmlDoc.createElement("Point");
                     coordinates = kmlDoc.createElement("coordinates");
 
 
@@ -315,13 +315,14 @@ public class MainController implements Initializable, DrawingCompleteListener, M
                     );
 
                     document.appendChild(placemark);
-                    document.appendChild(name);
-                    document.appendChild(description);
-                    document.appendChild(kPoint);
+                    placemark.appendChild(name);
+                    placemark.appendChild(description);
+                    placemark.appendChild(kPoint);
                     kPoint.appendChild(coordinates);
 
                     name.setTextContent(tmpGraphic.getAttributeValue("name").toString());
                     description.setTextContent(tmpGraphic.getAttributeValue("description").toString());
+
 
                 }
 
@@ -379,10 +380,10 @@ public class MainController implements Initializable, DrawingCompleteListener, M
                 if (tmpGraphic.getGeometry().getType() == Geometry.Type.POLYLINE) {
 
 
-                    placemark = kmlDoc.createElement("placemark");
+                    placemark = kmlDoc.createElement("Placemark");
                     name = kmlDoc.createElement("name");
                     description = kmlDoc.createElement("description");
-                    kLineString = kmlDoc.createElement("kLineString");
+                    kLineString = kmlDoc.createElement("LineString");
                     coordinates = kmlDoc.createElement("coordinates");
 
 
@@ -391,15 +392,15 @@ public class MainController implements Initializable, DrawingCompleteListener, M
 
                     StringBuilder bigString = new StringBuilder();
                     for (int j = 0; j < albersLine.getPointCount(); j++) {
-                        bigString.append(String.format("%s,%s,0\n", albersLine.getPoint(j).getX(), googleLine.getPoint(j).getY()));
+                        bigString.append(String.format("%s,%s,0%n", googleLine.getPoint(j).getX(), googleLine.getPoint(j).getY()));
                     }
                     coordinates.setTextContent(bigString.toString());
 
 
                     document.appendChild(placemark);
-                    document.appendChild(name);
-                    document.appendChild(description);
-                    document.appendChild(kLineString);
+                    placemark.appendChild(name);
+                    placemark.appendChild(description);
+                    placemark.appendChild(kLineString);
                     kLineString.appendChild(coordinates);
 
                     name.setTextContent(tmpGraphic.getAttributeValue("name").toString());
@@ -463,10 +464,10 @@ public class MainController implements Initializable, DrawingCompleteListener, M
                 if (tmpGraphic.getGeometry().getType() == Geometry.Type.POLYGON) {
 
 
-                    placemark = kmlDoc.createElement("placemark");
+                    placemark = kmlDoc.createElement("Placemark");
                     name = kmlDoc.createElement("name");
                     description = kmlDoc.createElement("description");
-                    kPolygon = kmlDoc.createElement("kLineString");
+                    kPolygon = kmlDoc.createElement("LinearRing");
                     coordinates = kmlDoc.createElement("coordinates");
 
 
@@ -475,15 +476,17 @@ public class MainController implements Initializable, DrawingCompleteListener, M
 
                     StringBuilder bigString = new StringBuilder();
                     for (int j = 0; j < albersPolygon.getPointCount(); j++) {
-                        bigString.append(String.format("%s,%s,0.\n", albersPolygon.getPoint(j).getX(), googlePolygon.getPoint(j).getY()));
+                        bigString.append(String.format("%s,%s,0%n", googlePolygon.getPoint(j).getX(), googlePolygon.getPoint(j).getY()));
                     }
+                    bigString.append(String.format("%s,%s,0%n", googlePolygon.getPoint(0).getX(), googlePolygon.getPoint(0).getY()));
                     coordinates.setTextContent(bigString.toString());
 
 
+
                     document.appendChild(placemark);
-                    document.appendChild(name);
-                    document.appendChild(description);
-                    document.appendChild(kPolygon);
+                    placemark.appendChild(name);
+                    placemark.appendChild(description);
+                    placemark.appendChild(kPolygon);
                     kPolygon.appendChild(coordinates);
 
                     name.setTextContent(tmpGraphic.getAttributeValue("name").toString());

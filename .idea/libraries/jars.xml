@@ -2,6 +2,7 @@
   <library name="jars">
     <CLASSES>
       <root url="file://C:/apps/ArcGIS/SDKs/java10.2.4/sdk/jars" />
+      <root url="file://C:/Apps/ArcGIS/SDKs/arcgis-runtime-sdk-java-100.0.0" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
